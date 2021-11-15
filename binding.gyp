@@ -47,14 +47,26 @@
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
       'sources': [
-        'src/example.cc'
+        'src/NativeBrowser/NativeBrowser.cc',
+        'src/NativeBrowser/gl_core.cc',
+        'src/NativeBrowser/web_core.cc',
+        'src/NativeBrowser/browser_client.cc',
+        'src/NativeBrowser/render_handler.cc'
       ],
-      'defines' : ['NAPI_DISABLE_CPP_EXCEPTIONS','UNICODE'],
-      'libraries': [],
-      "include_dirs": [
-        "<!@(node -p \"require('node-addon-api').include\")"
+      'defines' : ['PSAPI_VERSION=1', 'NOMINMAX', 'NAPI_DISABLE_CPP_EXCEPTIONS','UNICODE'],
+      'libraries': [
+        'libcef', 'libcef_dll_wrapper',
+        'Psapi', 'version', 'Winmm', 'Ws2_32', 'DbgHelp', 'opengl32', 'glew32'
       ],
-      'library_dirs' : [],
+      'library_dirs' : [
+        '<(module_root_dir)/deps/cef3/Release',
+        '<(module_root_dir)/deps/glew-2.1.0/lib/Release/x64'
+      ],
+      'include_dirs' : [
+        "<!@(node -p \"require('node-addon-api').include\")",
+        './','./deps/cef3',
+        './deps/glew-2.1.0/include'
+      ],
     },
     {
       "target_name": "copy_modules",
@@ -70,24 +82,24 @@
             '<(module_root_dir)/build/Release/CEFLauncherDLL.dll',
             # CEF native-browser
             '<(module_root_dir)/build/Release/native-browser.node',
-            # CEF Release Files
-            '<(module_root_dir)/<(cef_build_root_dir)/Release/*',
-            # CEF Resource Files
-            '<(module_root_dir)/<(cef_build_root_dir)/Resources/*'
+            # # CEF Release Files
+            # '<(module_root_dir)/<(cef_build_root_dir)/Release/*',
+            # # CEF Resource Files
+            # '<(module_root_dir)/<(cef_build_root_dir)/Resources/*'
           ]
         },
-        {
-          'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/swiftshader',
-          'files': [
-            '<(module_root_dir)/<(cef_build_root_dir)/Release/swiftshader/*',
-          ]
-        },
-        {
-          'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/locales',
-          'files': [
-            '<(module_root_dir)/<(cef_build_root_dir)/Resources/locales/*',
-          ]
-        },
+        # {
+        #   'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/swiftshader',
+        #   'files': [
+        #     '<(module_root_dir)/<(cef_build_root_dir)/Release/swiftshader/*',
+        #   ]
+        # },
+        # {
+        #   'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/locales',
+        #   'files': [
+        #     '<(module_root_dir)/<(cef_build_root_dir)/Resources/locales/*',
+        #   ]
+        # },
       ]
     }
   ]

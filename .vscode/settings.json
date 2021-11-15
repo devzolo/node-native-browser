@@ -1,6 +1,17 @@
 {
     "files.associations": {
         "system_error": "c",
-        "xlocale": "c"
+        "xlocale": "c",
+        "xiosbase": "cpp",
+        "charconv": "cpp",
+        "exception": "cpp",
+        "format": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "vector": "cpp",
+        "xmemory": "cpp",
+        "xutility": "cpp",
+        "functional": "cpp",
+        "memory": "cpp"
     }
 }
