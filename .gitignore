@@ -105,7 +105,7 @@ dist
 
 build/
 bin/
-
+deps/
 
 */libcef_dll_wrapper.lib
 */cef_sandbox.lib
