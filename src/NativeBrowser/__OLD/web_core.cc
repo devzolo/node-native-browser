@@ -27,6 +27,7 @@ bool WebCoreManager::setUp(int *exit_code)
 	}
 
 	CefSettings settings;
+  settings.no_sandbox = true;
 	bool result = CefInitialize(args, settings, nullptr, nullptr);
 	if (!result) {
 		*exit_code = -1;
@@ -78,6 +79,13 @@ WebCore::WebCore(const std::string &url)
 	window_info.SetAsWindowless(hwnd);
 
 	CefBrowserSettings browserSettings;
+  browserSettings.windowless_frame_rate = 30;
+  browserSettings.javascript_access_clipboard = cef_state_t::STATE_ENABLED;
+  browserSettings.javascript_dom_paste = cef_state_t::STATE_ENABLED;
+  browserSettings.webgl = cef_state_t::STATE_ENABLED;
+  browserSettings.plugins = cef_state_t::STATE_DISABLED;
+  browserSettings.javascript = cef_state_t::STATE_ENABLED;
+
 	// browserSettings.windowless_frame_rate = 60; // 30 is default
 	client_ = new BrowserClient(render_handler_);
 

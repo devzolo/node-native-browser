@@ -2,7 +2,7 @@
 #define NATIVEBROWSER_H
 
 #include <napi.h>
-#include "common.hh"
+
 class NativeBrowser : public Napi::ObjectWrap<NativeBrowser>
 {
 public:
@@ -10,10 +10,7 @@ public:
   NativeBrowser(const Napi::CallbackInfo &info);
 
 private:
-  ClientWebBrowser* m_pClientWebBrowser;
-
   static Napi::FunctionReference constructor;
-  Napi::Value LoadUrl(const Napi::CallbackInfo &info);
   Napi::Value GetUrl(const Napi::CallbackInfo &info);
   Napi::Value GetTextureId(const Napi::CallbackInfo &info);
   Napi::Value Update(const Napi::CallbackInfo &info);

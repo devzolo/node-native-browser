@@ -16,37 +16,7 @@
 #endif
 
 #include <include/cef_app.h>
-#include "gl_core.hh"
-#include "web_core.hh"
-#include "render_handler.hh"
-
-
-std::weak_ptr<WebCore> web_core;
-WebCoreManager g_web_core_manager;
-
-static void error_callback(int error, const char* description)
-{
-	fputs(description, stderr);
-}
-
-bool initialize_glew_context()
-{
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
-	{
-		// Problem: glewInit failed, something is seriously wrong
-		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-		return false;
-	}
-	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-	return true;
-}
-
-GLint pos_loc = -1;
-GLint texcoord_loc = -1;
-GLint tex_loc = -1;
-GLint mvp_loc = -1;
-
+#include "WebCore.hh"
 
 Napi::FunctionReference NativeBrowser::constructor;
 
@@ -55,16 +25,21 @@ Napi::Object NativeBrowser::Init(Napi::Env env, Napi::Object exports)
   Napi::HandleScope scope(env);
 
   Napi::Function func = DefineClass(env, "NativeBrowser", {
-    InstanceMethod("GetUrl", &NativeBrowser::GetUrl),
-    // InstanceMethod("getBufferLength", &NativeBrowser::GetBufferLength),
+    InstanceMethod("loadUrl", &NativeBrowser::LoadUrl),
+    InstanceMethod("getUrl", &NativeBrowser::GetUrl),
+    InstanceMethod("getTextureId", &NativeBrowser::GetTextureId),
+    InstanceMethod("bindTexture", &NativeBrowser::BindTexture),
+    InstanceMethod("update", &NativeBrowser::Update),
   });
 
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
-
   exports.Set("NativeBrowser", func);
+
   return exports;
 }
+
+
 
 NativeBrowser::NativeBrowser(const Napi::CallbackInfo &info)
     : Napi::ObjectWrap<NativeBrowser>(info)
@@ -72,86 +47,215 @@ NativeBrowser::NativeBrowser(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 1 || !info[0].IsString()) {
-    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
-    return;
+  Napi::Object instance = info.This().As<Napi::Object>();
+
+  // get object from option parammeter
+  Napi::Object options = info[0].As<Napi::Object>();
+
+
+  // get hwnd
+  if(options.Has("hwnd"))
+  {
+    HWND hwnd = (HWND)options.Get("hwnd").As<Napi::Number>().Int64Value();
+    WebCore::GetInstance()->SetWindowHandle(hwnd);
   }
 
-  int exit_code = 0;
-  bool success = g_web_core_manager.setUp( &exit_code );
-	if ( !success ) {
-    Napi::TypeError::New(env, "Failed to initialize web core").ThrowAsJavaScriptException();
-    return;
+  // get url
+  std::string url = "";
+  if (options.Has("url")) {
+    url = options.Get("url").As<Napi::String>();
   }
 
-	int width = 800;
-	int height = 600;
-
-  bool glew_init_success = initialize_glew_context();
-	if (!glew_init_success) {
-		g_web_core_manager.shutDown();
-    Napi::TypeError::New(env, "Failed to initialize GLEW").ThrowAsJavaScriptException();
-    return;
+  // get width
+  int width = 800;
+  if (options.Has("width")) {
+    width = options.Get("width").As<Napi::Number>();
   }
+
+  // get height
+  int height = 600;
+  if (options.Has("height")) {
+    height = options.Get("height").As<Napi::Number>();
+  }
+
+  // get title
+  std::string title = "";
+  if (options.Has("title")) {
+    title = options.Get("title").As<Napi::String>();
+  }
+
+  // get toolbar
+  bool toolbar = false;
+  if (options.Has("toolbar")) {
+    toolbar = options.Get("toolbar").As<Napi::Boolean>();
+  }
+
+  // get resizable
+  bool resizable = false;
+  if (options.Has("resizable")) {
+    resizable = options.Get("resizable").As<Napi::Boolean>();
+  }
+
+  // get fullscreen
+  bool fullscreen = false;
+  if (options.Has("fullscreen")) {
+    fullscreen = options.Get("fullscreen").As<Napi::Boolean>();
+  }
+
+  // get minWidth
+  int minWidth = 0;
+  if (options.Has("minWidth")) {
+    minWidth = options.Get("minWidth").As<Napi::Number>();
+  }
+
+  // get minHeight
+  int minHeight = 0;
+  if (options.Has("minHeight")) {
+    minHeight = options.Get("minHeight").As<Napi::Number>();
+  }
+
+  // get maxWidth
+  int maxWidth = 0;
+  if (options.Has("maxWidth")) {
+    maxWidth = options.Get("maxWidth").As<Napi::Number>();
+  }
+
+  // get maxHeight
+  int maxHeight = 0;
+  if (options.Has("maxHeight")) {
+    maxHeight = options.Get("maxHeight").As<Napi::Number>();
+  }
+
+  // get transparent
+  bool transparent = false;
+  if (options.Has("transparent")) {
+    transparent = options.Get("transparent").As<Napi::Boolean>();
+  }
+
+  // get frame
+  bool frame = false;
+  if (options.Has("frame")) {
+    frame = options.Get("frame").As<Napi::Boolean>();
+  }
+
+  // get show
+  bool show = true;
+  if (options.Has("show")) {
+    show = options.Get("show").As<Napi::Boolean>();
+  }
+
+  // get backgroundColor
+  std::string backgroundColor = "";
+  if (options.Has("backgroundColor")) {
+    backgroundColor = options.Get("backgroundColor").As<Napi::String>();
+  }
+
+  m_pClientWebBrowser = new ClientWebBrowser();
+  m_pClientWebBrowser->m_instance = instance;
+
+  if (options.Has("onCreated")) {
+    // save NativeBrowser api instance
+    Napi::Function func = options.Get("onCreated").As<Napi::Function>();
+    //if(func.IsFunction()) {
+      m_pClientWebBrowser->m_onCreatedCallback = Napi::Persistent(func);
+      m_pClientWebBrowser->m_onCreatedCallback.SuppressDestruct();
+    //}
+  }
+
+  if (options.Has("onClose")) {
+    Napi::Function func = options.Get("onClose").As<Napi::Function>();
+    // if(func.IsFunction()) {
+      m_pClientWebBrowser->m_onCloseCallback = Napi::Persistent(func);
+      m_pClientWebBrowser->m_onCloseCallback.SuppressDestruct();
+    // }
+  }
+
+  if (options.Has("onError")) {
+    Napi::Function func = options.Get("onError").As<Napi::Function>();
+    // if(func.IsFunction()) {
+      m_pClientWebBrowser->m_onErrorCallback = Napi::Persistent(func);
+      m_pClientWebBrowser->m_onErrorCallback.SuppressDestruct();
+    // }
+  }
+
+  // m_pClientWebBrowser->GetWebView()->SetSize(width, height);
+  // m_pClientWebBrowser->GetWebView()->SetTransparent(transparent);
+  // m_pClientWebBrowser->GetWebView()->SetShow(show);
+  // m_pClientWebBrowser->GetWebView()->SetBackgroundColor(backgroundColor);
+  // m_pClientWebBrowser->GetWebView()->SetFrame(frame);
+  // m_pClientWebBrowser->GetWebView()->SetResizable(resizable);
+  // m_pClientWebBrowser->GetWebView()->SetFullscreen(fullscreen);
+  // m_pClientWebBrowser->GetWebView()->SetMinSize(minWidth, minHeight);
+  // m_pClientWebBrowser->GetWebView()->SetMaxSize(maxWidth, maxHeight);
+  // m_pClientWebBrowser->GetWebView()->SetToolbar(toolbar);
+  // m_pClientWebBrowser->GetWebView()->SetTitle(title);
+
+}
+
+Napi::Value NativeBrowser::LoadUrl(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   std::string url = info[0].As<Napi::String>();
-  web_core = g_web_core_manager.createBrowser(url);
-  web_core.lock()->reshape(width, height);
-  GLuint prog = GLCore::createShaderProgram("shaders/tex.vert", "shaders/tex.frag");
-  pos_loc = glGetAttribLocation(prog, "pos");
-
-  if(prog != 0) {
-    g_web_core_manager.shutDown();
-    Napi::TypeError::New(env, "shader compile failed").ThrowAsJavaScriptException();
-    return;
-  }
-
-	pos_loc = glGetAttribLocation(prog, "a_position");
-	texcoord_loc = glGetAttribLocation(prog, "a_texcoord");
-	tex_loc = glGetUniformLocation(prog, "s_tex");
-	mvp_loc = glGetUniformLocation(prog, "u_mvp");
-
-  {
-    glUseProgram(prog);
-    glBindTexture(GL_TEXTURE_2D, web_core.lock()->render_handler()->tex());
-    g_web_core_manager.update();
-  }
-
-	GLCore::deleteProgram(prog);
-
-	// close cef
-	g_web_core_manager.removeBrowser( web_core );
-	g_web_core_manager.shutDown();
-
-
+  m_pClientWebBrowser->GetWebView()->LoadURL(url.c_str());
+  return env.Undefined();
 }
 
 Napi::Value NativeBrowser::GetUrl(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
-
-  std::string url = "";
-  if (info.Length() > 0 && info[0].IsString())
-  {
-    url = info[0].As<Napi::String>();
-  }
+  std::string url = m_pClientWebBrowser->GetUrl();
   return Napi::String::New(env, url);
 }
 
-
-// #include "gl_core.h"
-// #include "render_handler.h"
-// #include "web_core.h"
-
-Napi::String HelloMethod(const Napi::CallbackInfo& info) {
+Napi::Value NativeBrowser::GetTextureId(const Napi::CallbackInfo &info)
+{
   Napi::Env env = info.Env();
-  return Napi::String::New(env, "world");
+  Napi::HandleScope scope(env);
+
+  return env.Undefined();
+}
+
+Napi::Value NativeBrowser::BindTexture(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  return env.Undefined();
+}
+
+Napi::Value NativeBrowser::Update(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  return env.Undefined();
+}
+
+
+Napi::Value init(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  std::string basePath = info[0].As<Napi::String>();
+  WebCore::GetInstance()->Initialise(basePath);
+  return env.Undefined();
+}
+
+Napi::Value NativeBrowserUpdate(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  WebCore::GetInstance()->Update();
+
+  return env.Undefined();
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "hello"), Napi::Function::New(env, HelloMethod));
-  return exports;
+  exports.Set("init", Napi::Function::New(env, init));
+  exports.Set("NativeBrowserUpdate", Napi::Function::New(env, NativeBrowserUpdate));
+  return NativeBrowser::Init(env, exports);
 }
 
-NODE_API_MODULE(hello, Init)
+NODE_API_MODULE(init, Init)

@@ -1,12 +1,14 @@
-const addon = require(`../bin/${process.platform}/${process.arch}/native-browser`);
-export default addon;
+import path from 'path';
+const nativeDir = path.join(__dirname, '..', 'bin', process.platform, '/', process.arch);
+const browser = require(path.join(nativeDir, 'native-browser'));
 
+browser.initialize = (): unknown => {
+  browser.init(nativeDir)
+  return browser;
+};
 
-//get yarn cache dir by node version
-function getYarnCacheDir() {
-    const nodeVersion = process.versions.node;
-    const yarnCacheDir = path.join(process.env.HOME, '.cache', 'yarn', nodeVersion);
-    return yarnCacheDir;
+const browserEx = browser.initialize()
 
-}
+export default browserEx;
 
+export const { NativeBrowser, NativeBrowserUpdate } = browserEx;

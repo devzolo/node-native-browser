@@ -47,11 +47,12 @@
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
       'sources': [
+        'src/NativeBrowser/WebDevTools.cc',
+        'src/NativeBrowser/WebView.cc',
+        'src/NativeBrowser/WebCore.cc',
+        'src/NativeBrowser/WebApp.cc',
+        'src/NativeBrowser/ClientWebBrowser.cc',
         'src/NativeBrowser/NativeBrowser.cc',
-        'src/NativeBrowser/gl_core.cc',
-        'src/NativeBrowser/web_core.cc',
-        'src/NativeBrowser/browser_client.cc',
-        'src/NativeBrowser/render_handler.cc'
       ],
       'defines' : ['PSAPI_VERSION=1', 'NOMINMAX', 'NAPI_DISABLE_CPP_EXCEPTIONS','UNICODE'],
       'libraries': [
@@ -89,6 +90,24 @@
           ]
         },
         # {
+        #   'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/locales',
+        #   'files': [
+        #     '<(module_root_dir)/deps/glew-2.1.0/bin/Release/x64/locales/*',
+        #   ]
+        # },
+        # {
+        #   'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/swiftshader',
+        #   'files': [
+        #     '<(module_root_dir)/deps/glew-2.1.0/bin/Release/x64/swiftshader/*',
+        #   ]
+        # },
+        {
+          'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)',
+          'files': [
+            '<(module_root_dir)/deps/glew-2.1.0/bin/Release/x64/*',
+          ]
+        },
+        # {
         #   'destination': '<(module_root_dir)/bin/<(platform)/<(target_arch)/swiftshader',
         #   'files': [
         #     '<(module_root_dir)/<(cef_build_root_dir)/Release/swiftshader/*',
@@ -100,6 +119,12 @@
         #     '<(module_root_dir)/<(cef_build_root_dir)/Resources/locales/*',
         #   ]
         # },
+        {
+          'destination': '<(module_root_dir)\\dist',
+          'files': [
+            '<(module_root_dir)\\src\\@types\\index.d.ts',
+          ]
+        }
       ]
     }
   ]
