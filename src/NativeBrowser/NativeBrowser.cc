@@ -34,6 +34,7 @@ Napi::Object NativeBrowser::Init(Napi::Env env, Napi::Object exports)
 
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
+
   exports.Set("NativeBrowser", func);
 
   return exports;
@@ -47,8 +48,9 @@ NativeBrowser::NativeBrowser(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Object instance = info.This().As<Napi::Object>();
+  //auto self = reinterpret_cast<NativeBrowser *>(inner_obj_);
 
+  //salve self instance to pass in callback in future
   // get object from option parammeter
   Napi::Object options = info[0].As<Napi::Object>();
 
@@ -151,7 +153,6 @@ NativeBrowser::NativeBrowser(const Napi::CallbackInfo &info)
   }
 
   m_pClientWebBrowser = new ClientWebBrowser();
-  m_pClientWebBrowser->m_instance = instance;
 
   if (options.Has("onCreated")) {
     // save NativeBrowser api instance
@@ -215,7 +216,15 @@ Napi::Value NativeBrowser::GetTextureId(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  return env.Undefined();
+  auto webView = m_pClientWebBrowser->GetWebView();
+
+  int textureId = 0;
+
+  if (webView) {
+    textureId = webView->GetTextureId();
+  }
+
+  return Napi::Number::New(env, textureId);
 }
 
 Napi::Value NativeBrowser::BindTexture(const Napi::CallbackInfo &info)

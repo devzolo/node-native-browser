@@ -18,6 +18,55 @@ WebView::~WebView()
 
 void WebView::Initialize(void)
 {
+  // std::string vert =
+  //   "attribute vec4 a_position;\n"
+  //   "attribute vec2 a_texcoord;\n"
+  //   "uniform mat4 u_mvp;\n"
+  //   "varying vec2 v_texcoord;\n"
+  //   "void main() {\n"
+  //   "  v_texcoord = a_texcoord;\n"
+  //   "  gl_Position = u_mvp * a_position;\n"
+  //   "}\n";
+
+  // std::string frag =
+  //   "precision mediump float;\n"
+  //   "varying vec2 v_texcoord;\n"
+  //   "uniform sampler2D s_tex;\n"
+  //   "void main() {\n"
+  //   "  gl_FragColor = texture2D(s_tex, v_texcoord);\n"
+  //   "}\n";
+
+  // GLuint prog = GLCore::createShaderProgramFromCode(vert.c_str(), frag.c_str());
+
+  // if(prog != 0) {
+  //   MessageBox(NULL, L"shader compile failed", L"Error", MB_OK);
+  //   return;
+  // }
+
+  // pos_loc = glGetAttribLocation(prog, "a_position");
+	// texcoord_loc = glGetAttribLocation(prog, "a_texcoord");
+	// tex_loc = glGetUniformLocation(prog, "s_tex");
+	// mvp_loc = glGetUniformLocation(prog, "u_mvp");
+
+  glGenTextures(1, &tex_);
+	glBindTexture(GL_TEXTURE_2D, tex_);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	// dummy texture data - for debugging
+	const unsigned char data[] = {
+		255, 0, 0, 255,
+		0, 255, 0, 255,
+		0, 0, 255, 255,
+		255, 255, 255, 255,
+	};
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
   //settings.log_severity = cef_log_severity_t::LOGSEVERITY_INFO;
   CefBrowserSettings browserSettings;
   browserSettings.windowless_frame_rate = 30;
@@ -153,34 +202,34 @@ void WebView::OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect& rect)
 void WebView::OnPaint(CefRefPtr<CefBrowser> browser, CefRenderHandler::PaintElementType paintType, const CefRenderHandler::RectList& dirtyRects,
                        const void* buffer, int width, int height)
 {
-    // if (m_bBeingDestroyed)
-    //     return;
+    if (m_bBeingDestroyed)
+        return;
 
-    // {
-    //     std::lock_guard<std::mutex> lock(m_RenderData.dataMutex);
+    {
+        std::lock_guard<std::mutex> lock(m_RenderData.dataMutex);
 
-    //     // Copy popup buffer
-    //     if (paintType == PET_POPUP)
-    //     {
-    //         if (m_RenderData.popupBuffer)
-    //         {
-    //             memcpy(m_RenderData.popupBuffer.get(), buffer, width * height * 4);
-    //         }
+        // Copy popup buffer
+        if (paintType == PET_POPUP)
+        {
+            if (m_RenderData.popupBuffer)
+            {
+                memcpy(m_RenderData.popupBuffer.get(), buffer, width * height * 4);
+            }
 
-    //         return;            // We don't have to wait as we've copied the buffer already
-    //     }
+            return;            // We don't have to wait as we've copied the buffer already
+        }
 
-    //     // Store render data
-    //     m_RenderData.buffer = buffer;
-    //     m_RenderData.width = width;
-    //     m_RenderData.height = height;
-    //     m_RenderData.dirtyRects = dirtyRects;
-    //     m_RenderData.changed = true;
-    // }
+        // Store render data
+        m_RenderData.buffer = buffer;
+        m_RenderData.width = width;
+        m_RenderData.height = height;
+        m_RenderData.dirtyRects = dirtyRects;
+        m_RenderData.changed = true;
+    }
 
-    // // Wait for the main thread to handle drawing the texture
-    // std::unique_lock<std::mutex> lock(m_RenderData.cvMutex);
-    // m_RenderData.cv.wait(lock);
+    // Wait for the main thread to handle drawing the texture
+    std::unique_lock<std::mutex> lock(m_RenderData.cvMutex);
+    m_RenderData.cv.wait(lock);
 }
 
 
@@ -232,7 +281,22 @@ void WebView::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 }
 
 void WebView::UpdateTexture() {
-  //puts("WebView::UpdateTexture");
+  std::lock_guard<std::mutex> lock(m_RenderData.dataMutex);
+
+  // Update view area
+  if (m_RenderData.changed)
+  {
+    // Update changed state
+    m_RenderData.changed = false;
+
+    auto sourceData = static_cast<const byte*>(m_RenderData.buffer);
+
+    glBindTexture(GL_TEXTURE_2D, tex_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, sourceData);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  // Resume CEF render thread
+  m_RenderData.cv.notify_all();
 }
 
 
@@ -259,3 +323,8 @@ void WebView::UpdateTexture() {
   //   Napi::Function cbFunc = cb.As<Napi::Function>();
   //   cbFunc.Call(env.Global(), {Napi::String::New(env, "Hello from C++")});
   // });
+
+
+int WebView::GetTextureId() {
+  return tex_;
+}

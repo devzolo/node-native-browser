@@ -1,6 +1,7 @@
 #include "ClientWebBrowser.hh"
 #include "WebCore.hh"
 
+
 ClientWebBrowser::ClientWebBrowser(void)
 {
   m_pWebView = WebCore::GetInstance()->CreateWebView(800, 600, false);
@@ -312,6 +313,7 @@ void ClientWebBrowser::Unlink()
 void ClientWebBrowser::Events_OnCreated()
 {
   if(!m_onCreatedCallback.IsEmpty()) {
-    m_onCreatedCallback.Call({m_instance});
+    //pass m_instrance to the callback as Napi::Value
+    m_onCreatedCallback.Call({});
   }
 }

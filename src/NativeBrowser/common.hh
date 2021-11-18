@@ -1,6 +1,11 @@
 #include <string>
 #include <list>
 
+// OpenGL Graphics Includes
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include "GLCore.hh"
+
 #include "UTF8.hh"
 #include "WebApp.hh"
 #include "WebView.hh"

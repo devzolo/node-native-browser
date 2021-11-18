@@ -3,6 +3,9 @@
 #include "common.hh"
 #include "WebBrowserEventsInterface.hh"
 
+
+class NativeBrowser;
+
 class ClientWebBrowser : public WebBrowserEventsInterface
 {
 public:
@@ -15,7 +18,6 @@ public:
   void Events_OnCreated() OVERRIDE;
   inline WebView* GetWebView() { return m_pWebView; }
 
-  Napi::Object m_instance;
   Napi::FunctionReference m_onCreatedCallback;
   Napi::FunctionReference m_onCloseCallback;
   Napi::FunctionReference m_onErrorCallback;

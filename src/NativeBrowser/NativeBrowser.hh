@@ -3,9 +3,13 @@
 
 #include <napi.h>
 #include "common.hh"
+
+class ClientWebBrowser;
+
 class NativeBrowser : public Napi::ObjectWrap<NativeBrowser>
 {
 public:
+  void * inner_obj_;
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
   NativeBrowser(const Napi::CallbackInfo &info);
 

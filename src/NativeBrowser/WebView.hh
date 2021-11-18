@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gl/glew.h>
+#include <gl/gl.h>
 #include <napi.h>
 #include <include/cef_app.h>
 #include <include/cef_browser.h>
@@ -55,10 +57,43 @@ public:
 
 
   void UpdateTexture();
+  int GetTextureId();
+
+
+
+  struct
+  {
+      bool                    changed = false;
+      std::mutex              dataMutex;
+      std::mutex              cvMutex;
+      std::condition_variable cv;
+
+      const void*                buffer;
+      int                        width, height;
+      CefRenderHandler::RectList dirtyRects;
+
+      CefRect                 popupRect;
+      bool                    popupShown = false;
+      std::unique_ptr<byte[]> popupBuffer;
+  } m_RenderData;
 private:
   WebBrowserEventsInterface* m_pEventsInterface;
   CefRefPtr<CefBrowser> m_pWebView;
+
+  bool m_bBeingDestroyed = false;
+
+
+
   bool m_bIsTransparent;
+  int width_;
+	int height_;
+	unsigned int tex_;
+
+  GLuint prog = 0;
+  GLint pos_loc = -1;
+  GLint texcoord_loc = -1;
+  GLint tex_loc = -1;
+  GLint mvp_loc = -1;
 
   IMPLEMENT_REFCOUNTING(WebView);
 };

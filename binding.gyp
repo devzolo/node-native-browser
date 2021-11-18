@@ -47,6 +47,7 @@
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
       'sources': [
+        'src/NativeBrowser/GLCore.cc',
         'src/NativeBrowser/WebDevTools.cc',
         'src/NativeBrowser/WebView.cc',
         'src/NativeBrowser/WebCore.cc',
