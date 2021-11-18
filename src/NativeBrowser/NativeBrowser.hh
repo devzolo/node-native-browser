@@ -22,6 +22,7 @@ private:
   Napi::Value GetTextureId(const Napi::CallbackInfo &info);
   Napi::Value Update(const Napi::CallbackInfo &info);
   Napi::Value BindTexture(const Napi::CallbackInfo &info);
+  Napi::Value Resize(const Napi::CallbackInfo &info);
 //   // Napi::Value SetUrl(const Napi::CallbackInfo &info);
 //   // Napi::Value GetTitle(const Napi::CallbackInfo &info);
 //   // Napi::Value GetWidth(const Napi::CallbackInfo &info);

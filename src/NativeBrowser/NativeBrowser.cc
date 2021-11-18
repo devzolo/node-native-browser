@@ -30,6 +30,7 @@ Napi::Object NativeBrowser::Init(Napi::Env env, Napi::Object exports)
     InstanceMethod("getTextureId", &NativeBrowser::GetTextureId),
     InstanceMethod("bindTexture", &NativeBrowser::BindTexture),
     InstanceMethod("update", &NativeBrowser::Update),
+    InstanceMethod("resize", &NativeBrowser::Resize),
   });
 
   constructor = Napi::Persistent(func);
@@ -155,42 +156,22 @@ NativeBrowser::NativeBrowser(const Napi::CallbackInfo &info)
   m_pClientWebBrowser = new ClientWebBrowser();
 
   if (options.Has("onCreated")) {
-    // save NativeBrowser api instance
     Napi::Function func = options.Get("onCreated").As<Napi::Function>();
-    //if(func.IsFunction()) {
-      m_pClientWebBrowser->m_onCreatedCallback = Napi::Persistent(func);
-      m_pClientWebBrowser->m_onCreatedCallback.SuppressDestruct();
-    //}
+    m_pClientWebBrowser->m_onCreatedCallback = Napi::Persistent(func);
+    m_pClientWebBrowser->m_onCreatedCallback.SuppressDestruct();
   }
 
   if (options.Has("onClose")) {
     Napi::Function func = options.Get("onClose").As<Napi::Function>();
-    // if(func.IsFunction()) {
-      m_pClientWebBrowser->m_onCloseCallback = Napi::Persistent(func);
-      m_pClientWebBrowser->m_onCloseCallback.SuppressDestruct();
-    // }
+    m_pClientWebBrowser->m_onCloseCallback = Napi::Persistent(func);
+    m_pClientWebBrowser->m_onCloseCallback.SuppressDestruct();
   }
 
   if (options.Has("onError")) {
     Napi::Function func = options.Get("onError").As<Napi::Function>();
-    // if(func.IsFunction()) {
-      m_pClientWebBrowser->m_onErrorCallback = Napi::Persistent(func);
-      m_pClientWebBrowser->m_onErrorCallback.SuppressDestruct();
-    // }
+    m_pClientWebBrowser->m_onErrorCallback = Napi::Persistent(func);
+    m_pClientWebBrowser->m_onErrorCallback.SuppressDestruct();
   }
-
-  // m_pClientWebBrowser->GetWebView()->SetSize(width, height);
-  // m_pClientWebBrowser->GetWebView()->SetTransparent(transparent);
-  // m_pClientWebBrowser->GetWebView()->SetShow(show);
-  // m_pClientWebBrowser->GetWebView()->SetBackgroundColor(backgroundColor);
-  // m_pClientWebBrowser->GetWebView()->SetFrame(frame);
-  // m_pClientWebBrowser->GetWebView()->SetResizable(resizable);
-  // m_pClientWebBrowser->GetWebView()->SetFullscreen(fullscreen);
-  // m_pClientWebBrowser->GetWebView()->SetMinSize(minWidth, minHeight);
-  // m_pClientWebBrowser->GetWebView()->SetMaxSize(maxWidth, maxHeight);
-  // m_pClientWebBrowser->GetWebView()->SetToolbar(toolbar);
-  // m_pClientWebBrowser->GetWebView()->SetTitle(title);
-
 }
 
 Napi::Value NativeBrowser::LoadUrl(const Napi::CallbackInfo &info)
@@ -239,6 +220,24 @@ Napi::Value NativeBrowser::Update(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
+
+  return env.Undefined();
+}
+
+
+Napi::Value NativeBrowser::Resize(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  int width = info[0].As<Napi::Number>();
+  int height = info[1].As<Napi::Number>();
+
+  auto webView = m_pClientWebBrowser->GetWebView();
+
+  if(webView) {
+    webView->Resize(width, height);
+  }
 
   return env.Undefined();
 }

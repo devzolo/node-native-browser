@@ -59,6 +59,8 @@ public:
   void UpdateTexture();
   int GetTextureId();
 
+  inline void Resize(int width, int height) { m_iWidth = width; m_iHeight = height; };
+
 
 
   struct
@@ -85,8 +87,8 @@ private:
 
 
   bool m_bIsTransparent;
-  int width_;
-	int height_;
+  int m_iWidth = 1;
+	int m_iHeight = 1;
 	unsigned int tex_;
 
   GLuint prog = 0;

@@ -153,9 +153,8 @@ void WebView::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect)
     // rect.width = static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeX);
     // rect.height = static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeY);
 
-
-  rect.width = static_cast<int>(800);
-  rect.height = static_cast<int>(600);
+  rect.width = static_cast<int>(m_iWidth);
+  rect.height = static_cast<int>(m_iHeight);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -292,7 +291,7 @@ void WebView::UpdateTexture() {
     auto sourceData = static_cast<const byte*>(m_RenderData.buffer);
 
     glBindTexture(GL_TEXTURE_2D, tex_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, sourceData);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_iWidth, m_iHeight, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, sourceData);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
   // Resume CEF render thread

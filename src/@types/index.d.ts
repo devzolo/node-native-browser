@@ -30,6 +30,7 @@ declare module '@devzolo/node-native-browser' {
     bindTexture(): void;
     update(): void;
     destroy(): void;
+    resize(width: number, height: number): void;
   }
 
   export function NativeBrowserUpdate(): void;
