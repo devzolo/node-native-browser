@@ -26,9 +26,27 @@ public:
   WebView(bool bTransparent);
   ~WebView(void);
   void Initialize(void);
-  void SetWebBrowserEvents(WebBrowserEventsInterface* pInterface) { m_pEventsInterface = pInterface; };
+  void SetWebBrowserEvents(WebBrowserEventsInterface *pInterface) { m_pEventsInterface = pInterface; };
   void CloseBrowser(void);
   bool LoadURL(const char *url);
+  bool ToggleDevTools(bool visible);
+
+  // Exported methods
+  bool IsLoading();
+  void Focus(bool state = true);
+  bool SetProperty(const std::string &strKey, const std::string &strValue);
+  bool GetProperty(const std::string &strKey, std::string &outValue);
+  bool SetAudioVolume(float fVolume);
+  void ExecuteJavaScript(const std::string &strJavascriptCode);
+  void InjectKeyboardEvent(const CefKeyEvent& keyEvent);
+
+  bool CanGoBack();
+  bool CanGoForward();
+  bool GoBack();
+  bool GoForward();
+  void Reload(bool bIgnoreCache);
+
+
   inline CefRefPtr<CefBrowser> GetCefBrowser(void) { return m_pWebView; }
   virtual CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE { return this; };
   // virtual CefRefPtr<CefLoadHandler>        GetLoadHandler() override { return this; };
@@ -55,41 +73,43 @@ public:
                              bool *no_javascript_access) OVERRIDE;
   virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
 
-
   void UpdateTexture();
   int GetTextureId();
 
-  inline void Resize(int width, int height) { m_iWidth = width; m_iHeight = height; };
-
-
+  inline void Resize(int width, int height)
+  {
+    m_iWidth = width;
+    m_iHeight = height;
+  };
 
   struct
   {
-      bool                    changed = false;
-      std::mutex              dataMutex;
-      std::mutex              cvMutex;
-      std::condition_variable cv;
+    bool changed = false;
+    std::mutex dataMutex;
+    std::mutex cvMutex;
+    std::condition_variable cv;
 
-      const void*                buffer;
-      int                        width, height;
-      CefRenderHandler::RectList dirtyRects;
+    const void *buffer;
+    int width, height;
+    CefRenderHandler::RectList dirtyRects;
 
-      CefRect                 popupRect;
-      bool                    popupShown = false;
-      std::unique_ptr<byte[]> popupBuffer;
+    CefRect popupRect;
+    bool popupShown = false;
+    std::unique_ptr<byte[]> popupBuffer;
   } m_RenderData;
+
 private:
-  WebBrowserEventsInterface* m_pEventsInterface;
+  WebBrowserEventsInterface *m_pEventsInterface;
   CefRefPtr<CefBrowser> m_pWebView;
 
   bool m_bBeingDestroyed = false;
-
-
-
   bool m_bIsTransparent;
+  bool m_mouseButtonStates[3];
+  float m_fVolume;
+  std::map<std::string, std::string> m_Properties;
   int m_iWidth = 1;
-	int m_iHeight = 1;
-	unsigned int tex_;
+  int m_iHeight = 1;
+  unsigned int tex_;
 
   GLuint prog = 0;
   GLint pos_loc = -1;

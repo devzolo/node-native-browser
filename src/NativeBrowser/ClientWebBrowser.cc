@@ -4,7 +4,7 @@
 
 ClientWebBrowser::ClientWebBrowser(void)
 {
-  m_pWebView = WebCore::GetInstance()->CreateWebView(800, 600, false);
+  m_pWebView = WebCore::GetInstance()->CreateWebView(1, 1, true);
   m_pWebView->SetWebBrowserEvents(this);
 }
 

@@ -16,7 +16,11 @@ bool WebCore::Initialise(std::string basePath)
 
   int exit_code;
 
+  //change autoplay-policy to autoplay-policy=no-user-gesture-required
+
   CefMainArgs mainArgs;
+
+
 	exit_code = CefExecuteProcess(mainArgs, nullptr, nullptr);;
 	if (exit_code >= 0) {
     MessageBox(NULL, L"CefExecuteProcess fail!!", L"failed", MB_OK);
@@ -27,10 +31,12 @@ bool WebCore::Initialise(std::string basePath)
   void *sandboxInfo = nullptr;
   CefRefPtr<WebApp> app(new WebApp);
   CefSettings settings;
+
   settings.log_severity = cef_log_severity_t::LOGSEVERITY_INFO;
   settings.multi_threaded_message_loop = true;
   settings.windowless_rendering_enabled = true;
   settings.no_sandbox = true;
+  settings.command_line_args_disabled = false;
 
   std::string browser_subprocess_path = basePath + "/CEFLauncher.exe";
   cef_string_utf8_to_utf16(browser_subprocess_path.c_str(), browser_subprocess_path.length(), &settings.browser_subprocess_path);

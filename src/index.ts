@@ -11,4 +11,11 @@ const browserEx = browser.initialize()
 
 export default browserEx;
 
+export enum eKeyEventType {
+  KEYEVENT_RAWKEYDOWN = 0,
+  KEYEVENT_KEYDOWN,
+  KEYEVENT_KEYUP,
+  KEYEVENT_CHAR
+}
+
 export const { NativeBrowser, NativeBrowserUpdate } = browserEx;

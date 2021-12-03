@@ -10,7 +10,10 @@ bool WebDevTools::Show(WebView *pWebView)
   CefWindowInfo windowInfo;
   windowInfo.SetAsPopup(NULL, "NativeBrowser DevTools");
 
-  CefRefPtr<CefClient> pClient{new WebDevToolsClient};
+  // Create independent CefClient (to bypass access restrictions)
+  CefRefPtr<CefClient> client{new WebDevToolsClient};
+
+  pBrowser->GetHost()->ShowDevTools(windowInfo, client, settings, CefPoint());
   return false;
 }
 

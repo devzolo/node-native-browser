@@ -2,6 +2,13 @@
 
 #include "common.hh"
 
+enum eWebBrowserMouseButton
+{
+    BROWSER_MOUSEBUTTON_LEFT = 0,
+    BROWSER_MOUSEBUTTON_MIDDLE = 1,
+    BROWSER_MOUSEBUTTON_RIGHT = 2
+};
+
 class WebCore
 {
 public:
