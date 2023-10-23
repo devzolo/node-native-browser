@@ -11,21 +11,26 @@ jobs:
     #needs: build
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: '18.x'
           #cache: 'yarn'
           registry-url: https://npm.pkg.github.com/
           scope: '@devzolo'
-      - run: npm install
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 8
+          run_install: true
+      # - run: npm install
       #- run: yarn test
-      - run: npm run build
+      - run: pnpm run build
       - name: Delete Old Package
         uses: actions/delete-package-versions@v1
         with:
           package-name: 'node-native-browser'
-      - run: npm publish
+      - run: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       # - name: Delete Old Release
