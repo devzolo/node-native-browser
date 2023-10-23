@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
+              "${workspaceFolder}/**",
+              "${workspaceFolder}/deps/glew-2.1.0/include",
                 "C:/Users/Raphael/AppData/Local/node-gyp/Cache/16.13.0/include/node/**"
             ],
             "defines": [
